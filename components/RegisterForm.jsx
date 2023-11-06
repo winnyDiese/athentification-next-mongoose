@@ -1,5 +1,7 @@
 "use client"
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function RegisterForm(){
@@ -7,6 +9,8 @@ export default function RegisterForm(){
     const [password, setPassword] = useState("")
     const [email, setEmail] = useState("")
     const [error, setError] = useState("")
+
+    const router = useRouter()
 
     const handleSubmit = async (e)=>{
         e.preventDefault()
@@ -17,7 +21,23 @@ export default function RegisterForm(){
         }
 
         try {
-            const res = await fetch("/api/register",{
+
+            const resUserExist = await fetch("api/userExist",{
+                method:"POST",
+                headers:{
+                    "Content-type":"application/json"
+                },
+                body:JSON.stringify({email})
+            })
+            
+            const {user} = await resUserExist.json()
+
+            if(user){
+                setError("User already exist !")
+                return 
+            }
+
+            const res = await fetch("api/register",{
                 method:"POST",
                 header:{
                     "Content-type":"application/json"
@@ -28,6 +48,7 @@ export default function RegisterForm(){
             if(res.ok){
                 const form = e.target
                 form.reset()
+                router.push("/")
             }else{
                 console.log("User registration failed.")
             }
@@ -56,11 +77,11 @@ export default function RegisterForm(){
                     type="password" 
                     placeholder="Password"
                 />
-                <button className="bg-green-600 text-white font-bold cursor-pointer px-6 py-2">Register</button>
+                <button type="submit" className="bg-green-600 text-white font-bold cursor-pointer px-6 py-2">Register</button>
 
                 {error && (
                     <div className="bg-red-500 text-white w-fit text-sm py-1 px-3 rounded-md mt-2">
-                        Error message
+                        {error}
                     </div>
                 )}
 
